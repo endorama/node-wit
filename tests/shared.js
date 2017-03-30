@@ -96,6 +96,27 @@ module.exports.runTests = (wit) => {
       });
       return client.runActions(`session-${Date.now()}`, 'Hello', {}, 2);
     });
+    
+    it('tests runActions with low confidence', () => {
+      let actions = {
+        send: (request, response) => new Promise((resolve) => {
+          resolve();
+        }),
+        lowConfidence: (request) => new Promise((resolve) => {
+          resolve()
+        })
+      };
+      sinon.spy(actions, 'lowConfidence');
+      client = new Wit({
+        accessToken: process.env.WIT_TOKEN,
+        lowConfidenceThreshold: 1, // everything is low confidence here
+        actions
+      });
+      return client.runActions(`session-${Date.now()}`, 'I do not know what to do :(', {}, 2)
+        .then(() => {
+          expect(actions.lowConfidence.called).to.be.ok;
+        });
+    });
   });
 
   describe('interactive', () => {
